@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+    <style>
+        html,body{
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<table id="table" lay-filter="table"></table>
+</body>
+</html>
+<script src="layui/layui.js"></script>
+<script>
+    layui.use(['table'],function () {
+        var table=layui.table;
+        table.render({
+            elem:'#table',
+            url:'http://huobangshou.qx1688.net/projectshow/userController/queryByPage',
+            request: {
+                pageName: 'page' //页码的参数名称，默认：page
+                ,limitName: 'count' //每页数据量的参数名，默认：limit
+            },
+            response: {
+                statusName: 'code' //数据状态的字段名称，默认：code
+                ,statusCode: 200 //成功的状态码，默认：0
+                ,msgName: 'msg' //状态信息的字段名称，默认：msg
+                ,countName: 'data.total' //数据总数的字段名称，默认：count
+                ,dataName: 'data.rows' //数据列表的字段名称，默认：data
+            },
+            page: true, //开启分页
+            cols: [[ //表头
+                {field: 'id', title: 'ID', width:80, sort: true, fixed: 'left'}
+                ,{field: 'nickname', title: '用户名', width:250}
+                ,{field: 'createDate', title: '创建时间', width:120,sort:true,templet:'#createDate'}
+                ,{field: 'updateDate', title: '修改时间', width:120,sort:true,templet:'#updateDate'}
+            ]]
+        })
+    });
+
+    function timestampToTime(timestamp) {
+        var date=new Date(timestamp);
+        var Y=date.getFullYear();
+        var M=date.getMonth()+1<10?'0'+(date.getMonth()+1):date.getMonth()+1;
+        var D=date.getDate()<10?'0'+date.getDate():date.getDate();
+        return `${Y}-${M}-${D}`
+    }
+</script>
+<script type="text/html" id="createDate">
+    <span>{{timestampToTime(d.createDate)}}</span>
+</script>
+
+<script type="text/html" id="updateDate">
+    <span>{{timestampToTime(d.updateDate)}}</span>
+</script>
