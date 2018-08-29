@@ -37,9 +37,9 @@
         </dl>
     </li>
     <li class="layui-nav-item">
-        <a href="javascript:;">解决方案</a>
+        <a href="javascript:;">微信公众号</a>
         <dl class="layui-nav-child">
-            <dd><a href="">移动模块</a></dd>
+            <dd><a href="#" url="wxmenu.html">微信菜单</a></dd>
             <dd><a href="">后台模版</a></dd>
             <dd><a href="">电商平台</a></dd>
         </dl>
@@ -95,6 +95,9 @@
         $('#left-menu a').click(function () {
             var context = this;
             var url = $(this).attr('url');
+            if(url==undefined){
+                return;
+            }
             if (tabList.indexOf(url) > -1) {
                 element.tabChange('tab', url);
                 return;

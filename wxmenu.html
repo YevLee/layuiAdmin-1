@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="layui/css/layui.css">
+</head>
+<body>
+<div class="layui-btn-group" style="margin-bottom: 20px;">
+    <button class="layui-btn layui-btn-primary layui-btn-sm">增加</button>
+    <button class="layui-btn layui-btn-primary layui-btn-sm">编辑</button>
+    <button class="layui-btn layui-btn-primary layui-btn-sm">删除</button>
+</div>
+<ul id="menu"></ul>
+</body>
+</html>
+<script src="layui/layui.js"></script>
+<script>
+    var menuJson = {
+        "button": [
+            {
+                "name": "扫码",
+                "sub_button": [
+                    {
+                        "type": "scancode_waitmsg",
+                        "name": "扫码带提示",
+                        "key": "rselfmenu_0_0",
+                        "sub_button": []
+                    },
+                    {
+                        "type": "scancode_push",
+                        "name": "扫码推事件",
+                        "key": "rselfmenu_0_1",
+                        "sub_button": []
+                    }
+                ]
+            },
+            {
+                "name": "发图",
+                "sub_button": [
+                    {
+                        "type": "pic_sysphoto",
+                        "name": "系统拍照发图",
+                        "key": "rselfmenu_1_0",
+                        "sub_button": []
+                    },
+                    {
+                        "type": "pic_photo_or_album",
+                        "name": "拍照或者相册发图",
+                        "key": "rselfmenu_1_1",
+                        "sub_button": []
+                    },
+                    {
+                        "type": "pic_weixin",
+                        "name": "微信相册发图",
+                        "key": "rselfmenu_1_2",
+                        "sub_button": []
+                    }
+                ]
+            },
+            {
+                "name": "发送位置",
+                "type": "location_select",
+                "key": "rselfmenu_2_0"
+            }
+        ]
+    };
+    var nodesJson = [{ //节点
+        name: '微信菜单'
+        , spread: true
+        , layer: 0
+    }];
+    if (menuJson.button.length > 0) {
+        var firstChilds = [];
+        menuJson.button.forEach(function (item) {
+            var firstChild = {name: item.name, content: item, layer: 1, spread: true};
+            if (item.sub_button !== undefined && item.sub_button.length > 0) {
+                firstChild.children = [];
+                item.sub_button.forEach(function (subItem) {
+                    firstChild.children.push({name: subItem.name, content: subItem, layer: 2});
+                })
+            }
+            firstChilds.push(firstChild)
+        });
+        nodesJson[0].children = firstChilds;
+    }
+    // [{ //节点
+    //     name: '微信菜单'
+    //     ,spread:true
+    //     ,children: [{
+    //         name: '子节点11'
+    //     },{
+    //         name: '子节点12'
+    //     }]
+    // }]
+    layui.use(['tree', 'form', 'layer'], function () {
+        layui.tree({
+            elem: '#menu' //传入元素选择器
+            , nodes: nodesJson
+            , click: function (node) {
+                //node即为当前点击的节点数据
+                //document.getElementById('content').innerHTML=JSON.stringify(node);
+            }
+        });
+        var form = layui.form;
+        var layer = layui.layer;
+        layer.open({
+            type: 1,
+            title:'菜单',
+            content: `
+            <div id="form-dialog">dsajkdbaksdbabndakbnd</div>
+            `
+        });
+    });
+</script>
