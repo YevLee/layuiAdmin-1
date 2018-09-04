@@ -4,16 +4,68 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="layui/css/layui.css">
+    <style>
+        html, body {
+            height: 100%;
+            overflow-y: hidden;
+        }
+
+        #content {
+            height: 100%;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
-<div class="layui-btn-group" style="margin-bottom: 20px;">
-    <button class="layui-btn layui-btn-primary layui-btn-sm">增加</button>
-    <button class="layui-btn layui-btn-primary layui-btn-sm">编辑</button>
-    <button class="layui-btn layui-btn-primary layui-btn-sm">删除</button>
+<div id="content">
+    <div class="layui-btn-group" style="margin-bottom: 20px;">
+        <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="add()">增加</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="edit()">编辑</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="deleteMenu()">删除</button>
+        <button class="layui-btn layui-btn-primary layui-btn-sm" onclick="generateMenu()">生成菜单</button>
+    </div>
+    <ul id="menu"></ul>
 </div>
-<ul id="menu"></ul>
+<div id="form-dialog" style="padding: 15px;">
+    <form lay-filter="form-menu" class="layui-form" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" id="name" required  lay-verify="required" placeholder="请输入名称"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">级别</label>
+            <div class="layui-input-block">
+                <select name="layer" lay-verify="required">
+                    <option value="1">一级菜单</option>
+                    <option value="2">二级菜单</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">类别</label>
+            <div class="layui-input-block">
+                <select name="type" lay-filter="select-type" lay-verify="required" onchange="typeChange()">
+                    <option value="view">跳转网页</option>
+                    <option value="click">发送消息</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item" id="form-item-url">
+            <label class="layui-form-label">页面地址</label>
+            <div class="layui-input-block">
+                <input type="text" name="url" lay-verify="required" placeholder="请输入网址"
+                       autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <button id="btn_ok" style="display: none;">确定</button>
+    </form>
+</div>
 </body>
 </html>
+<script src="js/jquery-3.3.1.min.js"></script>
 <script src="layui/layui.js"></script>
 <script>
     var menuJson = {
@@ -65,51 +117,129 @@
             }
         ]
     };
-    var nodesJson = [{ //节点
-        name: '微信菜单'
-        , spread: true
-        , layer: 0
-    }];
-    if (menuJson.button.length > 0) {
-        var firstChilds = [];
-        menuJson.button.forEach(function (item) {
-            var firstChild = {name: item.name, content: item, layer: 1, spread: true};
-            if (item.sub_button !== undefined && item.sub_button.length > 0) {
-                firstChild.children = [];
-                item.sub_button.forEach(function (subItem) {
-                    firstChild.children.push({name: subItem.name, content: subItem, layer: 2});
-                })
-            }
-            firstChilds.push(firstChild)
-        });
-        nodesJson[0].children = firstChilds;
-    }
-    // [{ //节点
-    //     name: '微信菜单'
-    //     ,spread:true
-    //     ,children: [{
-    //         name: '子节点11'
-    //     },{
-    //         name: '子节点12'
-    //     }]
-    // }]
+    window.selectRow = undefined;
     layui.use(['tree', 'form', 'layer'], function () {
+        initMenu();
+        window.form = layui.form;
+        window.layer = layui.layer;
+        layui.form.on('submit(form-menu)',function (data) {
+            return false;
+        });
+        layui.form.on('select(select-type)', function(data){
+            if(data.value==='view'){
+                $('#form-item-url').css({display:'block'})
+            }else{
+                $('#form-item-url').css({display:'none'})
+            }
+        });
+    });
+    function add() {
+        layer.open({
+            type: 1,
+            title: '菜单',
+            content: $('#form-dialog'),
+            area: ['30%', '50%'],
+            btn:['确定','取消'],
+            yes:function (layero,index) {
+                $('#btn_ok').trigger('click');
+                return false;
+            },
+            cancel:function (layero, index) {
+
+            }
+        });
+    }
+
+    function edit() {
+        if (selectRow === undefined) {
+            layer.msg('请先选择菜单');
+            return;
+        } else if (selectRow.layer === 0) {
+            layer.msg('根菜单无法更改');
+            return;
+        }
+        layer.open({
+            type: 1,
+            title: '菜单',
+            content: $('#form-dialog'),
+            area: ['30%', '50%']
+        });
+    }
+
+    function deleteMenu() {
+        if (selectRow === undefined) {
+            layer.msg('请先选择菜单');
+            return;
+        } else if (selectRow.layer === 0) {
+            layer.msg('根菜单无法更改');
+            return;
+        }
+        layer.confirm('确定删除？', {
+            btn: ['确定', '取消'] //可以无限个按钮
+        }, function (index, layero) {
+            console.log(selectRow);
+            console.log(nodesJson[0].children);
+            if (selectRow.layer === 1) {
+                nodesJson[0].children.splice(selectRow.id, 1);
+            } else if (selectRow.layer === 2) {
+                nodesJson[0].children[selectRow.parentId].children.splice(selectRow.id, 1);
+            }
+            generateMenu();
+            initMenu();
+            layer.closeAll();
+        }, function (index) {
+
+        });
+    }
+
+    var nodesJson;
+    function initMenu() {
+        nodesJson = [{ //节点
+            name: '微信菜单'
+            , spread: true
+            , layer: 0
+        }];
+        if (menuJson.button.length > 0) {
+            var firstChilds = [];
+            menuJson.button.forEach(function (item, i) {
+                var firstChild = {name: item.name, content: item, layer: 1, spread: true, id: i};
+                if (item.sub_button !== undefined && item.sub_button.length > 0) {
+                    firstChild.children = [];
+                    item.sub_button.forEach(function (subItem, j) {
+                        firstChild.children.push({name: subItem.name, content: subItem, layer: 2, parentId: i, id: j});
+                    })
+                }
+                firstChilds.push(firstChild)
+            });
+            nodesJson[0].children = firstChilds;
+        }
+        $('#menu').html('');
         layui.tree({
             elem: '#menu' //传入元素选择器
             , nodes: nodesJson
             , click: function (node) {
+                selectRow = node;
                 //node即为当前点击的节点数据
                 //document.getElementById('content').innerHTML=JSON.stringify(node);
             }
         });
-        var form = layui.form;
-        var layer = layui.layer;
-        layer.open({
-            type: 1,
-            title:'菜单',
-            content: `
-            <div id="form-dialog">dsajkdbaksdbabndakbnd</div>
-            `
+    }
+
+    function generateMenu() {
+        menuJson = {
+            button: []
+        };
+        nodesJson[0].children.forEach(function (firstNode) {
+            if (firstNode.children !== undefined) {
+                firstNode.children.forEach(function (secondNode) {
+                    firstNode.content.sub_button.push(secondNode.content);
+                });
+            } else {
+                firstNode.content.sub_button = [];
+            }
+            firstNode.content.sub_button = firstNode.children;
+            menuJson.button.push(firstNode.content);
         });
-    });
+        console.log(JSON.stringify(menuJson));
+    }
 </script>
